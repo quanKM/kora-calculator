@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: Room Booking Price Calculator
+  version: 1.0.0
+  description: |
+    Contract for the room pricing calculation logic.
+    Notes:
+    - This API describes the "pure function" interface used internally by the frontend logic.
+    - All datetimes are local to the hotel (Vietnam).
+    - Inputs use 1-hour granularity.
+paths:
+  /calculate-price:
+    post:
+      summary: Calculate the total price for a booking
+      operationId: calculatePrice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+      responses:
+        '200':
+          description: Successful calculation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatorResult'
+
+components:
+  schemas:
+    BookingRequest:
+      type: object
+      required:
+        - roomId
+        - startDateTime
+        - endDateTime
+      properties:
+        roomId:
+          type: string
+          description: ID of the selected room
+        startDateTime:
+          type: string
+          format: date-time
+          description: Local start datetime (ISO 8601). Minutes/seconds should be 00 per 1-hour granularity rule.
+        endDateTime:
+          type: string
+          format: date-time
+          description: Local end datetime (ISO 8601). Minutes/seconds should be 00 per 1-hour granularity rule.
+        source:
+          type: string
+          enum: [guest, staff, unknown]
+
+    CalculatorResult:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          description: Whether the calculation succeeded
+        breakdown:
+          $ref: '#/components/schemas/PriceBreakdown'
+          nullable: true
+        errorMessageVi:
+          type: string
+          nullable: true
+          description: Error message in Vietnamese if ok is false
+
+    PriceBreakdown:
+      type: object
+      required:
+        - totalVnd
+        - components
+        - summaryVi
+      properties:
+        totalVnd:
+          type: number
+          description: Final total price in VND
+        summaryVi:
+          type: string
+          description: Narrative explanation of the calculation in Vietnamese
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceComponent'
+        warnings:
+          type: array
+          items:
+            type: string
+
+    PriceComponent:
+      type: object
+      required:
+        - kind
+        - amountVnd
+        - descriptionVi
+      properties:
+        kind:
+          type: string
+          enum: [combo, hourlyExtension]
+        descriptionVi:
+          type: string
+          description: Vietnamese description of this component
+        day:
+          type: string
+          format: date
+          description: The calendar day this fees applies to (YYYY-MM-DD)
+        isWeekend:
+          type: boolean
+        amountVnd:
+          type: number
+        comboType:
+          type: string
+          enum: [threeHour, halfDay, fullDay]
+          nullable: true
+        hours:
+          type: integer
+          nullable: true
+          description: Number of hours charged (if hourly extension)

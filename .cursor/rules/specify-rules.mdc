@@ -1,0 +1,30 @@
+# kora-room-calculator Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-09
+
+## Active Technologies
+
+- TypeScript (React 19) + React, React DOM, Vite, planned shadcn/ui component library for consistent modern UI (001-room-pricing-calculator)
+
+## Project Structure
+
+```text
+backend/
+frontend/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript (React 19): Follow standard conventions
+
+## Recent Changes
+
+- 001-room-pricing-calculator: Added TypeScript (React 19) + React, React DOM, Vite, planned shadcn/ui component library for consistent modern UI
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
