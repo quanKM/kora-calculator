@@ -79,14 +79,7 @@ describe('US3: Multi-day & Cross-Weekend Pricing', () => {
 
     it('should split multi-day stay into multiple Full Day combos', () => {
         // Friday 14:00 to Sunday 12:00 (Almost 48 hours)
-        // 1. Fri 14:00 - Sat 12:00. Full Day (Fri = Weekend rate? Yes, Fri/Sat/Sun).
-        //    Fri is Weekend. Price: 700k.
-        // 2. Sat 12:00 - Sat 14:00. Gap?
-        //    Wait, Full Day is 14:00 to 12:00 (22h).
-        //    Gap 12:00-14:00 (2h). Hourly Weekend (80k*2 = 160k).
-        // 3. Sat 14:00 - Sun 12:00. Full Day (Sat = Weekend). Price: 700k.
-
-        // Total: 700 + 160 + 700 = 1,560,000.
+        // Total: 700 + 0 + 700 = 1,400,000.
 
         const req: BookingRequest = {
             roomId: 'R1',
@@ -96,7 +89,7 @@ describe('US3: Multi-day & Cross-Weekend Pricing', () => {
 
         const res = calculatePrice(req, testRoom);
         expect(res.ok).toBe(true);
-        expect(res.breakdown?.totalVnd).toBe(1560000);
+        expect(res.breakdown?.totalVnd).toBe(1400000);
 
         // Verify structure
         // Combo (Fri) -> Hourly (Sat) -> Combo (Sat)
@@ -159,6 +152,32 @@ describe('US3: Multi-day & Cross-Weekend Pricing', () => {
         // So 00-01 and 01-02 constitute 2 hours of Weekend pricing.
         // Total 2 components.
         expect(hourly).toHaveLength(2);
-        expect(hourly[0].isWeekend).not.toBe(hourly[1].isWeekend);
+        expect(hourly![0].isWeekend).not.toBe(hourly![1].isWeekend);
+    });
+
+    it('should NOT charge for the 2-hour gap between consecutive Full Day combos (Gapless Logic)', () => {
+        // Tuesday 14:00 to Thursday 12:00 (46 hours)
+        // 1. Tue 14:00 - Wed 12:00: Full Day (Weekday). Price: 600k.
+        // 2. Wed 12:00 - Wed 14:00: Gap (2h). SHOULD BE 0 VND.
+        // 3. Wed 14:00 - Thu 12:00: Full Day (Weekday). Price: 600k.
+
+        // Expected Total: 1,200,000 VND.
+        // Old Logic Total: 600k + (2h * 70k) + 600k = 1,340,000 VND.
+
+        const req: BookingRequest = {
+            roomId: 'R1',
+            startDateTime: '2023-10-10T14:00:00', // Tue
+            endDateTime: '2023-10-12T12:00:00'  // Thu
+        };
+
+        const res = calculatePrice(req, testRoom);
+        expect(res.ok).toBe(true);
+        expect(res.breakdown?.totalVnd).toBe(1200000);
+
+        const combos = res.breakdown?.components.filter(c => c.kind === 'combo');
+        expect(combos).toHaveLength(2);
+
+        const hourly = res.breakdown?.components.filter(c => c.kind === 'hourlyExtension');
+        expect(hourly || []).toHaveLength(0);
     });
 });

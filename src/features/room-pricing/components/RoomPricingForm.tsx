@@ -18,6 +18,21 @@ export const RoomPricingForm: React.FC<RoomPricingFormProps> = ({ rooms, onSubmi
   const [endDate, setEndDate] = React.useState<string>('');
   const [error, setError] = React.useState<string | null>(null);
 
+  const handleDateTimeChange = (value: string, setter: (val: string) => void) => {
+    if (!value) {
+      setter('');
+      return;
+    }
+    // Force minutes and seconds to 00
+    const [datePart, timePart] = value.split('T');
+    if (timePart) {
+      const [hours] = timePart.split(':');
+      setter(`${datePart}T${hours}:00`);
+    } else {
+      setter(value);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -70,7 +85,7 @@ export const RoomPricingForm: React.FC<RoomPricingFormProps> = ({ rooms, onSubmi
                 id="start-time"
                 type="datetime-local"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => handleDateTimeChange(e.target.value, setStartDate)}
                 step="3600" // 1 hour step
                 required
               />
@@ -82,7 +97,7 @@ export const RoomPricingForm: React.FC<RoomPricingFormProps> = ({ rooms, onSubmi
                 id="end-time"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => handleDateTimeChange(e.target.value, setEndDate)}
                 step="3600"
                 required
               />

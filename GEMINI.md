@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-02-09
 
 ## Active Technologies
+- TypeScript (React 19) + Vite + React, date-fns, shadcn/ui (002-optimize-booking-pricing)
+- CSV-based pricing data (`pricing.csv`) (002-optimize-booking-pricing)
 
 - TypeScript (React 19) + React, React DOM, Vite, shadcn/ui (for UI components), csv-parse (or similar for CSV), date-fns (for date manipulation) (001-room-pricing-calculator)
 
@@ -23,6 +25,7 @@ npm test && npm run lint
 TypeScript (React 19): Follow standard conventions
 
 ## Recent Changes
+- 002-optimize-booking-pricing: Added TypeScript (React 19) + Vite + React, date-fns, shadcn/ui
 
 - 001-room-pricing-calculator: Added TypeScript (React 19) + React, React DOM, Vite, shadcn/ui (for UI components), csv-parse (or similar for CSV), date-fns (for date manipulation)
 

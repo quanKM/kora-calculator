@@ -94,6 +94,30 @@ export const calculatePrice = (
       };
     }
 
+    // 1.5 Bridge Option (12:00 -> 14:00) @ 0 VND
+    // This bridges the 2-hour gap between consecutive Full Day combos.
+    // We ONLY allow this if the current node was reached via a Full Day combo
+    // AND there is enough time remaining for at least another Full Day combo (2h gap + 22h combo).
+    if (currentTime.getHours() === 12 && currentTime.getMinutes() === 0) {
+      const actAtI = action[i];
+      const remainingSteps = totalSteps - i;
+      if (actAtI && actAtI.kind === 'combo' && actAtI.combo?.type === 'fullDay' && remainingSteps >= 24) {
+        const nextI_bridge = i + 2;
+        if (nextI_bridge <= totalSteps) {
+          if (cost[i] < cost[nextI_bridge]) {
+            cost[nextI_bridge] = cost[i];
+            parent[nextI_bridge] = i;
+            action[nextI_bridge] = {
+              kind: 'hourly',
+              cost: 0,
+              desc: 'Chuyển tiếp combo (Miễn phí)',
+              hours: 2
+            };
+          }
+        }
+      }
+    }
+
     // 2. Combo Options
     const comboIsWeekend = currentIsWeekend;
 
@@ -184,6 +208,12 @@ export const calculatePrice = (
           comboType: act.combo ? act.combo.type : null,
           hours: act.kind === 'hourly' ? act.hours : null
       };
+
+      // US2: Gapless Logic - do not add 0-cost bridge components to display
+      if (newComp.amountVnd === 0 && newComp.kind === 'hourlyExtension') {
+          curr = prev;
+          continue;
+      }
 
       // Check if we can merge with the next component (which is components[0] since we are unshifting)
       // We merge if both are hourly, same day, same weekend status.
