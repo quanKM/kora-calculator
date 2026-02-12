@@ -211,31 +211,29 @@ export const calculatePrice = (
 
   let totalVnd = cost[totalSteps];
 
-  // US4: Minimum 3-hour charge for short bookings (< 3 hours)
-  // If the booking is less than 3 hours (1 or 2 hours after rounding),
+  // US4: Minimum 3-hour charge for short bookings (<= 3 hours)
+  // If the booking is 3 hours or less (after rounding),
   // and a 3-hour combo is available, we enforce the 3-hour combo price.
-  if (totalHours < 3) {
+  if (totalHours <= 3) {
       const threeHourCombo = room.pricing.find(p => p.window.kind === 'threeHour');
       if (threeHourCombo) {
           const isWk = isWeekend(start);
           const minPrice = isWk ? threeHourCombo.weekendPriceVnd : threeHourCombo.weekdayPriceVnd;
 
-          // Only override if the calculated price is less than the minimum charge
-          if (totalVnd < minPrice) {
-              totalVnd = minPrice;
-              // Replace components with the single combo
-              // Note: We clear the previous components as they are superseded
-              components.length = 0;
-              components.push({
-                  kind: 'combo',
-                  comboType: threeHourCombo.type,
-                  descriptionVi: threeHourCombo.label,
-                  day: format(start, 'yyyy-MM-dd'),
-                  isWeekend: isWk,
-                  amountVnd: minPrice,
-                  hours: 3
-              });
-          }
+          // Strictly enforce the 3-hour combo price for stays <= 3h
+          totalVnd = minPrice;
+
+          // Replace components with the single combo
+          components.length = 0;
+          components.push({
+              kind: 'combo',
+              comboType: threeHourCombo.type,
+              descriptionVi: threeHourCombo.label,
+              day: format(start, 'yyyy-MM-dd'),
+              isWeekend: isWk,
+              amountVnd: minPrice,
+              hours: 3
+          });
       }
   }
 
