@@ -62,4 +62,27 @@ describe('US4: Short Bookings (< 3 Hours)', () => {
         expect(res.ok).toBe(true);
         expect(res.breakdown?.totalVnd).toBe(70000); // 70k hourly
     });
+
+    it('should charge 3-hour combo for exactly 3 hour booking even if hourly is cheaper', () => {
+        // Hourly: 3 * 70k = 210k.
+        // 3h Combo: 250k.
+        // Should charge 250k.
+        const expensiveRoom: Room = {
+            ...testRoom,
+            pricing: [{
+                ...threeHourCombo,
+                weekdayPriceVnd: 250000
+            }]
+        };
+        const req: BookingRequest = {
+            roomId: 'R1',
+            startDateTime: '2023-10-09T10:00:00',
+            endDateTime: '2023-10-09T13:00:00' // 3h
+        };
+        const res = calculatePrice(req, expensiveRoom);
+        expect(res.ok).toBe(true);
+        expect(res.breakdown?.totalVnd).toBe(250000);
+        expect(res.breakdown?.components).toHaveLength(1);
+        expect(res.breakdown?.components[0].comboType).toBe('threeHour');
+    });
 });
